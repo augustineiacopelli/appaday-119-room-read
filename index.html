@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Room Read - Interior Design Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f1ea;
+    --panel:#ffffff;
+    --ink:#2b2622;
+    --ink-soft:#6b6058;
+    --accent:#b4623f;
+    --accent-soft:#e7cdbd;
+    --sage:#7d8f6f;
+    --line:#e4dbd0;
+    --danger:#b0403a;
+    --radius:16px;
+    --gap:clamp(12px,3vw,20px);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100svh;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;margin:0;}
+  .app-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:clamp(10px,3vw,16px) clamp(14px,4vw,24px);
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .app-header .brand{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .app-header .brand a{
+    font-size:clamp(11px,2.4vw,12px);
+    color:var(--ink-soft);
+    text-decoration:none;
+  }
+  .app-header .title{
+    font-size:clamp(18px,4.5vw,22px);
+    color:var(--ink);
+  }
+  .icon-btn{
+    min-width:44px;
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:12px;
+    cursor:pointer;
+    font-size:18px;
+    color:var(--ink);
+  }
+  main{
+    flex:1;
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    padding:var(--gap) var(--gap) clamp(40px,8vh,64px);
+    display:flex;
+    flex-direction:column;
+    gap:var(--gap);
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:clamp(16px,4vw,24px);
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  input[type="text"],input[type="number"],textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fbf8f4;
+    color:var(--ink);
+    min-height:44px;
+  }
+  textarea{resize:vertical;min-height:80px;}
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  button{
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    border:none;
+    border-radius:12px;
+    min-height:44px;
+    padding:12px 20px;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+    width:100%;
+  }
+  .btn-primary:disabled{background:#c9b3a6;cursor:not-allowed;}
+  .btn-secondary{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+    width:100%;
+  }
+  .btn-text{
+    background:transparent;
+    color:var(--accent);
+    padding:8px 4px;
+  }
+  .btn-danger{
+    background:transparent;
+    border:1px solid var(--danger);
+    color:var(--danger);
+    width:100%;
+  }
+  .row-gap{display:flex;flex-direction:column;gap:10px;}
+  .empty-state{
+    text-align:center;
+    padding:clamp(30px,8vh,60px) 16px;
+    color:var(--ink-soft);
+  }
+  .empty-state h2{margin-bottom:8px;color:var(--ink);}
+  .history-item{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+    cursor:pointer;
+    min-height:44px;
+  }
+  .history-item img{
+    width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--accent-soft);
+  }
+  .history-item .meta{flex:1;min-width:0;}
+  .history-item .meta .name{font-weight:600;font-size:15px;}
+  .history-item .meta .date{font-size:13px;color:var(--ink-soft);}
+  .photo-preview{
+    width:100%;
+    border-radius:var(--radius);
+    display:block;
+    margin-bottom:14px;
+    background:var(--accent-soft);
+  }
+  .photo-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .photo-thumb-wrap{
+    position:relative;
+    aspect-ratio:1/1;
+    border-radius:12px;
+    overflow:hidden;
+    background:var(--accent-soft);
+  }
+  .photo-thumb{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .photo-remove{
+    position:absolute;
+    top:6px;
+    right:6px;
+    width:28px;
+    height:28px;
+    min-height:28px;
+    padding:0;
+    border-radius:50%;
+    background:rgba(43,38,34,0.72);
+    color:#fff;
+    font-size:14px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .file-drop{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:2px dashed var(--line);
+    border-radius:var(--radius);
+    padding:clamp(24px,8vh,48px) 16px;
+    text-align:center;
+    color:var(--ink-soft);
+    min-height:44px;
+    cursor:pointer;
+  }
+  .spinner{
+    width:40px;height:40px;
+    border-radius:50%;
+    border:4px solid var(--accent-soft);
+    border-top-color:var(--accent);
+    margin:0 auto;
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .analyzing-wrap{
+    text-align:center;
+    padding:clamp(50px,14vh,90px) 16px;
+    color:var(--ink-soft);
+  }
+  .analyzing-wrap p{margin-top:18px;font-size:15px;}
+  .section-title{
+    font-size:clamp(16px,4vw,19px);
+    margin-bottom:10px;
+  }
+  .observation-list{margin:0;padding-left:20px;}
+  .observation-list li{margin-bottom:8px;line-height:1.5;}
+  .punch-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin-bottom:8px;
+    min-height:44px;
+    cursor:pointer;
+    background:#fbf8f4;
+  }
+  .punch-item.done{opacity:0.55;}
+  .punch-item.done .punch-text{text-decoration:line-through;}
+  .punch-check{
+    width:22px;height:22px;
+    border-radius:6px;
+    border:2px solid var(--accent);
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;color:#fff;
+  }
+  .punch-check.checked{background:var(--accent);}
+  .punch-text{flex:1;font-size:15px;line-height:1.4;}
+  .swatch{
+    width:22px;height:22px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .style-card{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    background:#fbf8f4;
+  }
+  .style-card h3{font-size:16px;margin-bottom:4px;}
+  .style-card p{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.5;}
+  .style-images{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .style-images img{
+    width:calc(33.333% - 6px);
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:8px;
+    background:var(--line);
+    flex-shrink:0;
+  }
+  .raw-fallback{
+    white-space:pre-wrap;
+    font-family:ui-monospace,monospace;
+    font-size:13px;
+    background:#fbf8f4;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px;
+    max-height:300px;
+    overflow:auto;
+  }
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(43,38,34,0.5);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .modal-sheet{
+    background:var(--panel);
+    width:100%;
+    max-width:640px;
+    border-radius:20px 20px 0 0;
+    padding:clamp(18px,5vw,26px);
+    max-height:85svh;
+    overflow-y:auto;
+  }
+  .modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .footer-back{
+    text-align:center;
+    padding:20px 16px clamp(24px,6vh,40px);
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .footer-back a{color:var(--accent);text-decoration:none;font-weight:600;}
+  .hint{font-size:13px;color:var(--ink-soft);margin-top:6px;}
+  .confirm-note{font-size:13px;color:var(--danger);margin-top:8px;text-align:center;}
+  .room-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+    cursor:pointer;
+    min-height:44px;
+    position:relative;
+  }
+  .room-card img{
+    width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--accent-soft);
+  }
+  .room-card .room-thumb-empty{
+    width:56px;height:56px;border-radius:10px;flex-shrink:0;background:var(--accent-soft);
+  }
+  .room-card .meta{flex:1;min-width:0;}
+  .room-card .meta .name{font-weight:600;font-size:15px;}
+  .status-badge{
+    display:inline-block;
+    font-size:12px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:999px;
+    margin-top:4px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .status-draft{background:var(--line);color:var(--ink-soft);}
+  .status-ready{background:var(--accent-soft);color:var(--accent);}
+  .status-analyzing{background:#e5e0d8;color:var(--ink-soft);}
+  .status-done{background:#dbe4d4;color:var(--sage);}
+  .status-error{background:#f2d9d6;color:var(--danger);}
+  .room-remove{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:28px;
+    height:28px;
+    min-height:28px;
+    padding:0;
+    border-radius:50%;
+    background:rgba(43,38,34,0.72);
+    color:#fff;
+    font-size:13px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tab-bar{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:var(--gap);
+  }
+  .tab-btn{
+    flex-shrink:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    border-radius:999px;
+    padding:9px 16px;
+    font-size:14px;
+    min-height:40px;
+    white-space:nowrap;
+  }
+  .tab-btn.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <div class="title" id="header-title">Room Read</div>
+    <a href="https://augustineiacopelli.github.io/appaday/">AppADay #119</a>
+  </div>
+  <button class="icon-btn" id="settings-btn" aria-label="Settings">&#9881;</button>
+</header>
+<main id="app-root"></main>
+<div id="modal-root"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CLAUDE_MODEL = 'claude-sonnet-5';
+  var STORAGE_KEY_HISTORY = 'roomread_history';
+  var STORAGE_KEY_SETTINGS = 'roomread_settings';
+  var MAX_PHOTOS = 6;
+  var MAX_ROOMS = 8;
+
+  var state = {
+    currentScreen: 'home',
+    project: null,
+    activeRoomIndex: null,
+    activeResultRoomIndex: 0,
+    viewingFromHistory: false,
+    history: [],
+    settingsOpen: false,
+    apiKey: '',
+    sessionName: '',
+    defaultStylePref: '',
+    clearConfirm: false,
+    errorMsg: '',
+    analyzingLabel: 'Reading the rooms.'
+  };
+
+  function loadSettings(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        state.apiKey = parsed.apiKey || '';
+        state.sessionName = parsed.sessionName || '';
+        state.defaultStylePref = parsed.defaultStylePref || '';
+      }
+    }catch(e){ /* ignore corrupt settings */ }
+  }
+
+  function saveSettings(){
+    try{
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({ apiKey: state.apiKey, sessionName: state.sessionName, defaultStylePref: state.defaultStylePref }));
+    }catch(e){ /* storage unavailable */ }
+  }
+
+  function loadHistory(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+      state.history = raw ? JSON.parse(raw) : [];
+    }catch(e){ state.history = []; }
+  }
+
+  function persistHistory(){
+    try{
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(state.history));
+    }catch(e){ /* storage unavailable */ }
+  }
+
+  function el(tag, attrs, children){
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    for(var k in attrs){
+      if(k === 'class'){ node.className = attrs[k]; }
+      else if(k === 'html'){ node.innerHTML = attrs[k]; }
+      else if(k.indexOf('on') === 0 && typeof attrs[k] === 'function'){
+        node.addEventListener(k.slice(2), attrs[k]);
+      } else {
+        node.setAttribute(k, attrs[k]);
+      }
+    }
+    (children || []).forEach(function(c){
+      if(c === null || c === undefined) return;
+      if(typeof c === 'string'){ node.appendChild(document.createTextNode(c)); }
+      else { node.appendChild(c); }
+    });
+    return node;
+  }
+
+  function clearNode(node){
+    while(node.firstChild){
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  function backLink(fn){
+    return el('button', { class: 'btn-text', onclick: fn }, ['Back']);
+  }
+
+  function goHome(){
+    state.currentScreen = 'home';
+    state.viewingFromHistory = false;
+    render();
+  }
+
+  function makeRoom(){
+    return {
+      roomName: '',
+      budget: '',
+      fixedElements: '',
+      stylePref: state.defaultStylePref || '',
+      photos: [],
+      result: null,
+      rawFallback: null,
+      status: 'draft'
+    };
+  }
+
+  function newProject(){
+    state.project = { id: null, projectName: '', rooms: [] };
+    state.activeRoomIndex = null;
+    state.viewingFromHistory = false;
+    state.currentScreen = 'project';
+    render();
+  }
+
+  // ---------- HOME / HISTORY ----------
+  function renderHome(){
+    var wrap = el('div', { class: 'row-gap' }, []);
+    var startBtn = el('button', { class: 'btn-primary', onclick: newProject }, ['New Project']);
+    wrap.appendChild(startBtn);
+
+    if(state.history.length === 0){
+      wrap.appendChild(el('div', { class: 'empty-state' }, [
+        el('h2', {}, ['No analyses yet']),
+        el('div', {}, ['Start a project above. A project can hold one room or several, each with its own photos and read.'])
+      ]));
+    } else {
+      wrap.appendChild(el('h2', { class: 'section-title' }, ['Past Projects']));
+      var list = el('div', { class: 'row-gap' }, []);
+      var sorted = state.history.slice().sort(function(a,b){ return Number(b.id) - Number(a.id); });
+      sorted.forEach(function(entry){
+        var roomCount = (entry.rooms || []).length;
+        var item = el('div', { class: 'history-item', onclick: function(){
+          openHistoryProject(entry);
+        }}, [
+          entry.thumbnail ? el('img', { src: entry.thumbnail, alt: '' }, []) : el('div', { class: 'room-thumb-empty' }, []),
+          el('div', { class: 'meta' }, [
+            el('div', { class: 'name' }, [entry.projectName || 'Untitled Project']),
+            el('div', { class: 'date' }, [entry.date + ' \u00b7 ' + roomCount + (roomCount === 1 ? ' room' : ' rooms')])
+          ])
+        ]);
+        list.appendChild(item);
+      });
+      wrap.appendChild(list);
+    }
+    return wrap;
+  }
+
+  function openHistoryProject(entry){
+    state.project = {
+      id: entry.id,
+      projectName: entry.projectName,
+      rooms: (entry.rooms || []).map(function(r){
+        return { roomName: r.roomName, budget: '', fixedElements: '', stylePref: '', photos: [], result: r.data, rawFallback: null, status: 'done' };
+      })
+    };
+    state.viewingFromHistory = true;
+    state.activeResultRoomIndex = 0;
+    state.currentScreen = 'results';
+    render();
+  }
+
+  // ---------- PROJECT OVERVIEW ----------
+  function renderProject(){
+    var wrap = el('div', { class: 'row-gap' }, []);
+    var card = el('div', { class: 'card' }, []);
+    card.appendChild(el('h2', { class: 'section-title' }, ['Project']));
+    var nameField = el('div', { class: 'field' }, [
+      el('label', {}, ['Project Name']),
+      el('input', { type: 'text', id: 'proj-name', value: state.project.projectName, placeholder: 'e.g. Downtown Apartment', onchange: function(e){
+        state.project.projectName = e.target.value.trim();
+      }}, [])
+    ]);
+    card.appendChild(nameField);
+    wrap.appendChild(card);
+
+    var rooms = state.project.rooms;
+    if(rooms.length === 0){
+      wrap.appendChild(el('div', { class: 'empty-state' }, [
+        el('h2', {}, ['No rooms yet']),
+        el('div', {}, ['Add a room to get started. You can add up to ' + MAX_ROOMS + ' rooms to one project.'])
+      ]));
+    } else {
+      var list = el('div', { class: 'row-gap' }, []);
+      rooms.forEach(function(room, idx){
+        var thumb = room.photos.length ? el('img', { src: room.photos[0].thumbBase64, alt: '' }, []) : el('div', { class: 'room-thumb-empty' }, []);
+        var badge = el('span', { class: 'status-badge status-' + room.status }, [statusLabel(room.status)]);
+        var card2 = el('div', { class: 'room-card', onclick: function(){ openRoomFromProject(idx); } }, [
+          thumb,
+          el('div', { class: 'meta' }, [
+            el('div', { class: 'name' }, [room.roomName || ('Room ' + (idx + 1))]),
+            badge
+          ])
+        ]);
+        if(room.status !== 'analyzing'){
+          var removeBtn = el('button', { class: 'room-remove', onclick: function(e){
+            e.stopPropagation();
+            rooms.splice(idx, 1);
+            render();
+          }}, ['\u2715']);
+          card2.appendChild(removeBtn);
+        }
+        list.appendChild(card2);
+      });
+      wrap.appendChild(list);
+    }
+
+    if(rooms.length < MAX_ROOMS){
+      wrap.appendChild(el('button', { class: 'btn-secondary', onclick: function(){
+        var nameInput = document.getElementById('proj-name');
+        if(nameInput){ state.project.projectName = nameInput.value.trim(); }
+        rooms.push(makeRoom());
+        state.activeRoomIndex = rooms.length - 1;
+        state.currentScreen = 'context';
+        render();
+      }}, ['Add Room']));
+    }
+
+    var readyCount = rooms.filter(function(r){ return r.photos.length > 0 && (r.status === 'ready' || r.status === 'error'); }).length;
+    var analyzeBtn = el('button', {
+      class: 'btn-primary',
+      disabled: readyCount > 0 ? null : 'disabled',
+      onclick: function(){
+        if(!state.apiKey){
+          state.errorMsg = 'Add your Claude API key in Settings before analyzing.';
+          render();
+          return;
+        }
+        state.errorMsg = '';
+        analyzeAllRooms();
+      }
+    }, ['Analyze All Rooms' + (readyCount > 0 ? ' (' + readyCount + ')' : '')]);
+    if(readyCount === 0){ analyzeBtn.disabled = true; }
+    wrap.appendChild(analyzeBtn);
+
+    if(state.errorMsg){
+      wrap.appendChild(el('div', { class: 'confirm-note' }, [state.errorMsg]));
+    }
+    wrap.appendChild(backLink(goHome));
+    return wrap;
+  }
+
+  function statusLabel(status){
+    if(status === 'draft'){ return 'Needs Photos'; }
+    if(status === 'ready'){ return 'Ready'; }
+    if(status === 'analyzing'){ return 'Analyzing'; }
+    if(status === 'done'){ return 'Done'; }
+    if(status === 'error'){ return 'Error'; }
+    return status;
+  }
+
+  function openRoomFromProject(idx){
+    var room = state.project.rooms[idx];
+    if(room.status === 'done' || room.status === 'error'){
+      state.activeResultRoomIndex = idx;
+      state.currentScreen = 'results';
+      render();
+      return;
+    }
+    state.activeRoomIndex = idx;
+    state.currentScreen = 'context';
+    render();
+  }
+
+  // ---------- CONTEXT FORM ----------
+  function activeRoom(){
+    if(state.activeRoomIndex === null || !state.project) return null;
+    return state.project.rooms[state.activeRoomIndex];
+  }
+
+  function renderContext(){
+    var room = activeRoom();
+    var wrap = el('div', { class: 'card' }, []);
+    wrap.appendChild(el('h2', { class: 'section-title' }, ['Tell us about this room']));
+
+    var nameField = el('div', { class: 'field' }, [
+      el('label', {}, ['Room Name']),
+      el('input', { type: 'text', id: 'ctx-room', value: room.roomName, placeholder: 'e.g. Living Room' }, [])
+    ]);
+    var budgetField = el('div', { class: 'field' }, [
+      el('label', {}, ['Budget']),
+      el('input', { type: 'text', id: 'ctx-budget', value: room.budget, placeholder: 'e.g. $500 or flexible' }, [])
+    ]);
+    var fixedField = el('div', { class: 'field' }, [
+      el('label', {}, ['Fixed Elements to Keep']),
+      el('textarea', { id: 'ctx-fixed', placeholder: 'e.g. the sofa, the rug, the built-in shelving' }, [room.fixedElements])
+    ]);
+    var styleField = el('div', { class: 'field' }, [
+      el('label', {}, ['Style Preference']),
+      el('input', { type: 'text', id: 'ctx-style', value: room.stylePref, placeholder: 'e.g. warm minimalist, coastal, mid-century modern' }, []),
+      el('div', { class: 'hint' }, ['Optional. Steers the critique and style directions toward this aesthetic. Set a default in Settings to skip retyping it each time.'])
+    ]);
+
+    wrap.appendChild(nameField);
+    wrap.appendChild(budgetField);
+    wrap.appendChild(fixedField);
+    wrap.appendChild(styleField);
+
+    var continueBtn = el('button', { class: 'btn-primary', onclick: function(){
+      room.roomName = document.getElementById('ctx-room').value.trim();
+      room.budget = document.getElementById('ctx-budget').value.trim();
+      room.fixedElements = document.getElementById('ctx-fixed').value.trim();
+      room.stylePref = document.getElementById('ctx-style').value.trim();
+      state.currentScreen = 'photo';
+      render();
+    }}, ['Continue to Photos']);
+
+    var outer = el('div', { class: 'row-gap' }, [wrap, continueBtn, backLink(function(){ state.currentScreen = 'project'; render(); })]);
+    return outer;
+  }
+
+  // ---------- PHOTO CAPTURE ----------
+  function renderPhoto(){
+    var room = activeRoom();
+    var wrap = el('div', { class: 'row-gap' }, []);
+    var card = el('div', { class: 'card' }, []);
+    card.appendChild(el('h2', { class: 'section-title' }, ['Photograph ' + (room.roomName || 'this room')]));
+    card.appendChild(el('div', { class: 'hint' }, ['Add a few shots of the space: the full room, each wall, the floor, the ceiling, and any furnishings worth a closer look. Up to ' + MAX_PHOTOS + ' photos.']));
+
+    if(room.photos.length){
+      var grid = el('div', { class: 'photo-grid' }, []);
+      room.photos.forEach(function(p, idx){
+        var thumbWrap = el('div', { class: 'photo-thumb-wrap' }, [
+          el('img', { class: 'photo-thumb', src: p.workingBase64, alt: 'Room photo ' + (idx + 1) }, []),
+          el('button', { class: 'photo-remove', onclick: function(){
+            room.photos.splice(idx, 1);
+            render();
+          }}, ['\u2715'])
+        ]);
+        grid.appendChild(thumbWrap);
+      });
+      card.appendChild(grid);
+    }
+
+    var fileInput = el('input', { type: 'file', accept: 'image/*', capture: 'environment', multiple: 'multiple', id: 'photo-input', style: 'display:none;' }, []);
+    fileInput.addEventListener('change', function(e){
+      var files = e.target.files;
+      if(files && files.length){ handlePhotoFiles(room, files); }
+      fileInput.value = '';
+    });
+
+    var remaining = MAX_PHOTOS - room.photos.length;
+    var dropLabel;
+    if(remaining <= 0){ dropLabel = 'Photo limit reached'; }
+    else if(room.photos.length === 0){ dropLabel = 'Tap to take or choose photos'; }
+    else { dropLabel = 'Add another photo'; }
+
+    var dropZone = el('div', { class: 'file-drop', onclick: function(){
+      if(remaining > 0){ fileInput.click(); }
+    }}, [dropLabel]);
+
+    card.appendChild(dropZone);
+    card.appendChild(fileInput);
+    wrap.appendChild(card);
+
+    var hasPhotos = room.photos.length > 0;
+    var doneBtn = el('button', {
+      class: 'btn-primary',
+      disabled: hasPhotos ? null : 'disabled',
+      onclick: function(){
+        room.status = room.photos.length > 0 ? 'ready' : 'draft';
+        state.activeRoomIndex = null;
+        state.currentScreen = 'project';
+        render();
+      }
+    }, ['Save Room to Project']);
+    if(!hasPhotos){ doneBtn.disabled = true; }
+
+    wrap.appendChild(doneBtn);
+    wrap.appendChild(backLink(function(){ state.currentScreen = 'context'; render(); }));
+    return wrap;
+  }
+
+  function handlePhotoFiles(room, fileList){
+    var files = Array.prototype.slice.call(fileList);
+    var slotsLeft = MAX_PHOTOS - room.photos.length;
+    if(slotsLeft <= 0){ return; }
+    files = files.slice(0, slotsLeft);
+    files.forEach(function(file){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          room.photos.push({
+            workingBase64: compressToDataUrl(img, 1024, 0.82),
+            thumbBase64: compressToDataUrl(img, 150, 0.7)
+          });
+          render();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function compressToDataUrl(img, maxDim, quality){
+    var w = img.width, h = img.height;
+    if(w >= h){
+      if(w > maxDim){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+    } else {
+      if(h > maxDim){ w = Math.round(w * (maxDim / h)); h = maxDim; }
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  // ---------- ANALYZING ----------
+  function renderAnalyzing(){
+    return el('div', { class: 'analyzing-wrap' }, [
+      el('div', { class: 'spinner' }, []),
+      el('p', {}, [state.analyzingLabel])
+    ]);
+  }
+
+  function stripCodeFences(text){
+    var t = text.trim();
+    t = t.replace(/^```(?:json)?\s*/i, '');
+    t = t.replace(/```\s*$/,'');
+    return t.trim();
+  }
+
+  function buildSystemPrompt(){
+    return 'You are an interior design assistant. You will be shown one or more photos of the same room, ' +
+      'taken from different angles so together they may cover the walls, floor, ceiling, and furnishings. ' +
+      'Treat all photos as views of a single space and synthesize one unified read across all of them. ' +
+      'Respond with ONLY valid JSON and nothing else, no markdown code fences, no commentary before or after. ' +
+      'Match exactly this schema: {"critique": "string", "observations": ["string", "..."], ' +
+      '"punch_list": [{"item": "string", "hex": "string or null"}], ' +
+      '"style_directions": [{"name": "string", "description": "string", "search_query": "string"}]}. ' +
+      'Provide one paragraph for critique, three to five observations, four to eight punch list items ' +
+      '(include a hex color code only when the item is specifically a paint or accent color suggestion, otherwise null), ' +
+      'and two to three style directions. The search_query field should be a short phrase suitable for searching ' +
+      'stock interior photography of that style, such as "scandinavian living room" or "warm minimalist bedroom".';
+  }
+
+  function buildContextLines(room){
+    var photoNote = room.photos.length > 1
+      ? ('These ' + room.photos.length + ' photos are different views of the same room.')
+      : 'This photo shows the room.';
+    return [
+      'Room: ' + (room.roomName || 'Unspecified'),
+      'Budget: ' + (room.budget || 'Unspecified'),
+      'Fixed elements to keep: ' + (room.fixedElements || 'None specified'),
+      'Style preference: ' + (room.stylePref || 'None specified, use your best judgment for the space'),
+      '',
+      photoNote,
+      'Analyze the attached room photo(s) as one space and provide a critique, observations, an actionable punch list, and style direction options. If a style preference is given, let it steer the critique and make sure at least one style direction reflects it, but still offer variety across the style directions.'
+    ].join('\n');
+  }
+
+  function callClaudeForRoom(room){
+    var content = room.photos.map(function(p){
+      return { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: p.workingBase64.split(',')[1] } };
+    });
+    content.push({ type: 'text', text: buildContextLines(room) });
+
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 2000,
+        system: buildSystemPrompt(),
+        messages: [{ role: 'user', content: content }]
+      })
+    }).then(function(resp){
+      return resp.json().then(function(data){
+        if(!resp.ok){
+          var msg = (data && data.error && data.error.message) ? data.error.message : 'Request failed';
+          throw new Error(msg);
+        }
+        return data;
+      });
+    }).then(function(data){
+      var textBlock = (data.content || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('\n');
+      var cleaned = stripCodeFences(textBlock);
+      try{
+        var parsed = JSON.parse(cleaned);
+        parsed.punch_list = (parsed.punch_list || []).map(function(p){
+          return { item: p.item || '', hex: p.hex || null, done: false };
+        });
+        parsed.observations = parsed.observations || [];
+        parsed.style_directions = parsed.style_directions || [];
+        return { result: parsed, rawFallback: null };
+      }catch(e){
+        return { result: null, rawFallback: textBlock };
+      }
+    });
+  }
+
+  function analyzeAllRooms(){
+    var rooms = state.project.rooms;
+    var toAnalyze = rooms.filter(function(r){ return r.photos.length > 0 && (r.status === 'ready' || r.status === 'error'); });
+    var total = toAnalyze.length;
+    if(total === 0){ return; }
+
+    state.currentScreen = 'analyzing';
+    state.analyzingLabel = 'Reading the rooms.';
+    render();
+
+    var doneCount = 0;
+
+    function runNext(i){
+      if(i >= rooms.length){
+        var firstIdx = rooms.findIndex(function(r){ return r.status === 'done' || r.status === 'error'; });
+        state.activeResultRoomIndex = firstIdx >= 0 ? firstIdx : 0;
+        state.currentScreen = 'results';
+        render();
+        return;
+      }
+      var room = rooms[i];
+      if(room.photos.length === 0 || (room.status !== 'ready' && room.status !== 'error')){
+        runNext(i + 1);
+        return;
+      }
+      room.status = 'analyzing';
+      doneCount++;
+      state.analyzingLabel = 'Analyzing room ' + doneCount + ' of ' + total + ': ' + (room.roomName || 'Room ' + (i + 1));
+      render();
+
+      callClaudeForRoom(room).then(function(outcome){
+        if(outcome.result){
+          room.result = outcome.result;
+          room.rawFallback = null;
+          room.status = 'done';
+          fetchStyleImagesForRoom(room);
+        } else {
+          room.result = null;
+          room.rawFallback = outcome.rawFallback;
+          room.status = 'error';
+        }
+        runNext(i + 1);
+      }).catch(function(err){
+        room.result = null;
+        room.rawFallback = 'Request failed: ' + (err && err.message ? err.message : String(err));
+        room.status = 'error';
+        runNext(i + 1);
+      });
+    }
+
+    runNext(0);
+  }
+
+  function retryRoom(idx){
+    var room = state.project.rooms[idx];
+    if(!room || room.photos.length === 0) { return; }
+    room.status = 'analyzing';
+    state.currentScreen = 'analyzing';
+    state.analyzingLabel = 'Re-analyzing ' + (room.roomName || 'this room') + '.';
+    render();
+    callClaudeForRoom(room).then(function(outcome){
+      if(outcome.result){
+        room.result = outcome.result;
+        room.rawFallback = null;
+        room.status = 'done';
+        fetchStyleImagesForRoom(room);
+      } else {
+        room.result = null;
+        room.rawFallback = outcome.rawFallback;
+        room.status = 'error';
+      }
+      state.activeResultRoomIndex = idx;
+      state.currentScreen = 'results';
+      render();
+    }).catch(function(err){
+      room.result = null;
+      room.rawFallback = 'Request failed: ' + (err && err.message ? err.message : String(err));
+      room.status = 'error';
+      state.activeResultRoomIndex = idx;
+      state.currentScreen = 'results';
+      render();
+    });
+  }
+
+  function fetchStyleImagesForRoom(room){
+    var directions = room.result ? room.result.style_directions : [];
+    (directions || []).forEach(function(dir){
+      var q = encodeURIComponent(dir.search_query || dir.name || 'interior design');
+      fetch('https://api.openverse.org/v1/images/?q=' + q + '&page_size=3')
+        .then(function(r){ return r.json(); })
+        .then(function(json){
+          dir.images = (json.results || []).slice(0, 3).map(function(r){ return r.thumbnail || r.url; }).filter(Boolean);
+          if(state.currentScreen === 'results'){ render(); }
+        })
+        .catch(function(){
+          dir.images = [];
+        });
+    });
+  }
+
+  // ---------- RESULTS ----------
+  function renderResults(){
+    var wrap = el('div', { class: 'row-gap' }, []);
+    var rooms = state.project.rooms;
+    var tabRooms = [];
+    rooms.forEach(function(r, idx){
+      if(r.status === 'done' || r.status === 'error'){ tabRooms.push(idx); }
+    });
+
+    if(tabRooms.length === 0){
+      wrap.appendChild(el('div', { class: 'empty-state' }, [el('h2', {}, ['Nothing analyzed yet'])]));
+      wrap.appendChild(backLink(function(){ state.currentScreen = 'project'; render(); }));
+      return wrap;
+    }
+
+    if(tabRooms.indexOf(state.activeResultRoomIndex) === -1){
+      state.activeResultRoomIndex = tabRooms[0];
+    }
+
+    if(tabRooms.length > 1){
+      var tabBar = el('div', { class: 'tab-bar' }, tabRooms.map(function(idx){
+        var r = rooms[idx];
+        return el('button', { class: 'tab-btn' + (idx === state.activeResultRoomIndex ? ' active' : ''), onclick: function(){
+          state.activeResultRoomIndex = idx;
+          render();
+        }}, [r.roomName || ('Room ' + (idx + 1))]);
+      }));
+      wrap.appendChild(tabBar);
+    }
+
+    var room = rooms[state.activeResultRoomIndex];
+
+    if(room.status === 'error'){
+      wrap.appendChild(el('div', { class: 'card' }, [
+        el('h2', { class: 'section-title' }, ['Could not parse a clean result']),
+        el('div', { class: 'raw-fallback' }, [room.rawFallback || ''])
+      ]));
+      if(!state.viewingFromHistory){
+        var idxCopy = state.activeResultRoomIndex;
+        wrap.appendChild(el('button', { class: 'btn-primary', onclick: function(){ retryRoom(idxCopy); } }, ['Retry This Room']));
+      }
+      wrap.appendChild(backLink(function(){ state.currentScreen = 'project'; render(); }));
+      return wrap;
+    }
+
+    var result = room.result;
+    if(!result){
+      wrap.appendChild(el('div', { class: 'empty-state' }, [el('h2', {}, ['Nothing to show']) ]));
+      wrap.appendChild(backLink(goHome));
+      return wrap;
+    }
+
+    wrap.appendChild(el('div', { class: 'card' }, [
+      el('h2', { class: 'section-title' }, ['Critique']),
+      el('div', {}, [result.critique || ''])
+    ]));
+
+    if(result.observations && result.observations.length){
+      var obsList = el('ul', { class: 'observation-list' }, result.observations.map(function(o){
+        return el('li', {}, [o]);
+      }));
+      wrap.appendChild(el('div', { class: 'card' }, [
+        el('h2', { class: 'section-title' }, ['Observations']),
+        obsList
+      ]));
+    }
+
+    if(result.punch_list && result.punch_list.length){
+      var punchCard = el('div', { class: 'card' }, []);
+      punchCard.appendChild(el('h2', { class: 'section-title' }, ['Punch List']));
+      result.punch_list.forEach(function(item){
+        var row = el('div', { class: 'punch-item' + (item.done ? ' done' : '') }, [
+          el('div', { class: 'punch-check' + (item.done ? ' checked' : '') }, [item.done ? '\u2713' : '']),
+          el('div', { class: 'punch-text' }, [item.item]),
+          item.hex ? el('div', { class: 'swatch', style: 'background:' + item.hex + ';' }, []) : null
+        ]);
+        row.addEventListener('click', function(){
+          item.done = !item.done;
+          render();
+        });
+        punchCard.appendChild(row);
+      });
+      wrap.appendChild(punchCard);
+    }
+
+    if(result.style_directions && result.style_directions.length){
+      var styleCard = el('div', { class: 'card' }, []);
+      styleCard.appendChild(el('h2', { class: 'section-title' }, ['Style Directions']));
+      result.style_directions.forEach(function(dir){
+        var inner = el('div', { class: 'style-card' }, [
+          el('h3', {}, [dir.name || '']),
+          el('p', {}, [dir.description || ''])
+        ]);
+        if(dir.images && dir.images.length){
+          var imgRow = el('div', { class: 'style-images' }, dir.images.map(function(src){
+            return el('img', { src: src, alt: dir.name || '' }, []);
+          }));
+          inner.appendChild(imgRow);
+        }
+        styleCard.appendChild(inner);
+      });
+      wrap.appendChild(styleCard);
+    }
+
+    if(!state.viewingFromHistory){
+      var doneRooms = rooms.filter(function(r){ return r.status === 'done'; }).length;
+      var stillPending = rooms.some(function(r){ return r.photos.length > 0 && (r.status === 'ready' || r.status === 'analyzing'); });
+      if(doneRooms > 0 && !stillPending){
+        wrap.appendChild(el('button', { class: 'btn-primary', onclick: saveProject }, ['Save Project to History']));
+      } else if(doneRooms > 0){
+        wrap.appendChild(el('div', { class: 'hint' }, ['Finish analyzing the remaining rooms, then save the whole project from here.']));
+      }
+    }
+
+    wrap.appendChild(backLink(function(){
+      if(state.viewingFromHistory){ goHome(); }
+      else { state.currentScreen = 'project'; render(); }
+    }));
+    return wrap;
+  }
+
+  function saveProject(){
+    var rooms = state.project.rooms.filter(function(r){ return r.status === 'done' && r.result; });
+    if(rooms.length === 0){ return; }
+    var thumbnail = null;
+    for(var i = 0; i < state.project.rooms.length; i++){
+      if(state.project.rooms[i].photos.length){
+        thumbnail = state.project.rooms[i].photos[0].thumbBase64;
+        break;
+      }
+    }
+    var storedRooms = rooms.map(function(r){
+      var strippedResult = JSON.parse(JSON.stringify(r.result));
+      (strippedResult.style_directions || []).forEach(function(d){ delete d.images; });
+      return { roomName: r.roomName || 'Room', data: strippedResult };
+    });
+    var entry = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().slice(0, 10),
+      projectName: state.project.projectName || 'Untitled Project',
+      thumbnail: thumbnail,
+      rooms: storedRooms
+    };
+    state.history.push(entry);
+    persistHistory();
+    goHome();
+  }
+
+  // ---------- SETTINGS MODAL ----------
+  function renderSettingsModal(){
+    var backdrop = el('div', { class: 'modal-backdrop', onclick: function(e){
+      if(e.target === backdrop){ state.settingsOpen = false; render(); }
+    }}, []);
+
+    var sheet = el('div', { class: 'modal-sheet' }, []);
+    sheet.appendChild(el('div', { class: 'modal-head' }, [
+      el('h2', {}, ['Settings']),
+      el('button', { class: 'icon-btn', onclick: function(){ state.settingsOpen = false; render(); } }, ['\u2715'])
+    ]));
+
+    sheet.appendChild(el('div', { class: 'field' }, [
+      el('label', {}, ['Session Name']),
+      el('input', { type: 'text', id: 'set-session', value: state.sessionName, placeholder: 'Optional label' }, [])
+    ]));
+
+    sheet.appendChild(el('div', { class: 'field' }, [
+      el('label', {}, ['Claude API Key']),
+      el('input', { type: 'text', id: 'set-apikey', value: state.apiKey, placeholder: 'sk-ant-...' }, []),
+      el('div', { class: 'hint' }, ['Stored only in this browser. Never sent anywhere except Anthropic\u2019s API.'])
+    ]));
+
+    sheet.appendChild(el('div', { class: 'field' }, [
+      el('label', {}, ['Default Style Preference']),
+      el('input', { type: 'text', id: 'set-style', value: state.defaultStylePref, placeholder: 'e.g. warm minimalist' }, []),
+      el('div', { class: 'hint' }, ['Pre-fills the Style Preference field on every new room. You can still change it per room.'])
+    ]));
+
+    sheet.appendChild(el('button', { class: 'btn-primary', onclick: function(){
+      state.sessionName = document.getElementById('set-session').value.trim();
+      state.apiKey = document.getElementById('set-apikey').value.trim();
+      state.defaultStylePref = document.getElementById('set-style').value.trim();
+      saveSettings();
+      state.settingsOpen = false;
+      render();
+    }}, ['Save Settings']));
+
+    var clearWrap = el('div', {}, []);
+    if(state.clearConfirm){
+      clearWrap.appendChild(el('button', { class: 'btn-danger', onclick: function(){
+        state.history = [];
+        persistHistory();
+        state.clearConfirm = false;
+        render();
+      }}, ['Tap again to confirm clear']));
+      clearWrap.appendChild(el('div', { class: 'confirm-note' }, ['This deletes all saved history permanently.']));
+    } else {
+      clearWrap.appendChild(el('button', { class: 'btn-danger', onclick: function(){
+        state.clearConfirm = true;
+        render();
+      }}, ['Clear History']));
+    }
+    sheet.appendChild(el('div', { class: 'field' }, [clearWrap]));
+
+    backdrop.appendChild(sheet);
+    return backdrop;
+  }
+
+  // ---------- ROOT RENDER ----------
+  function render(){
+    var root = document.getElementById('app-root');
+    clearNode(root);
+
+    var headerTitle = document.getElementById('header-title');
+    headerTitle.textContent = state.sessionName ? state.sessionName : 'Room Read';
+
+    var view;
+    if(state.currentScreen === 'home'){ view = renderHome(); }
+    else if(state.currentScreen === 'project'){ view = renderProject(); }
+    else if(state.currentScreen === 'context'){ view = renderContext(); }
+    else if(state.currentScreen === 'photo'){ view = renderPhoto(); }
+    else if(state.currentScreen === 'analyzing'){ view = renderAnalyzing(); }
+    else if(state.currentScreen === 'results'){ view = renderResults(); }
+    else { view = renderHome(); }
+
+    root.appendChild(view);
+
+    var modalRoot = document.getElementById('modal-root');
+    clearNode(modalRoot);
+    if(state.settingsOpen){
+      modalRoot.appendChild(renderSettingsModal());
+    }
+
+    var footer = document.getElementById('main-footer');
+    if(!footer){
+      footer = el('div', { id: 'main-footer', class: 'footer-back' }, [
+        'Part of ',
+        el('a', { href: 'https://augustineiacopelli.github.io/appaday/' }, ['AppADay']),
+        ' \u2014 one app, every day.'
+      ]);
+      document.body.appendChild(footer);
+    }
+  }
+
+  document.getElementById('settings-btn').addEventListener('click', function(){
+    state.clearConfirm = false;
+    state.settingsOpen = true;
+    render();
+  });
+
+  loadSettings();
+  loadHistory();
+  render();
+})();
+</script>
+</body>
+</html>
