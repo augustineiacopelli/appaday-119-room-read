@@ -10,6 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/119.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/models.js"></script>
+<script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="119" data-legacy-key="roomread_settings:apiKey" data-accent="#289664" defer></script>
 <title>Room Read | AppADay 119</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -438,7 +440,7 @@
 (function(){
   "use strict";
 
-  var CLAUDE_MODEL = 'claude-sonnet-5';
+  var CLAUDE_MODEL = (window.AppModels ? window.AppModels.id('sonnet') : '');
   var STORAGE_KEY_HISTORY = 'roomread_history';
   var STORAGE_KEY_SETTINGS = 'roomread_settings';
   var MAX_PHOTOS = 6;
@@ -452,7 +454,6 @@
     viewingFromHistory: false,
     history: [],
     settingsOpen: false,
-    apiKey: '',
     sessionName: '',
     defaultStylePref: '',
     clearConfirm: false,
@@ -465,7 +466,6 @@
       var raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
       if(raw){
         var parsed = JSON.parse(raw);
-        state.apiKey = parsed.apiKey || '';
         state.sessionName = parsed.sessionName || '';
         state.defaultStylePref = parsed.defaultStylePref || '';
       }
@@ -474,7 +474,7 @@
 
   function saveSettings(){
     try{
-      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({ apiKey: state.apiKey, sessionName: state.sessionName, defaultStylePref: state.defaultStylePref }));
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({ sessionName: state.sessionName, defaultStylePref: state.defaultStylePref }));
     }catch(e){ /* storage unavailable */ }
   }
 
@@ -499,7 +499,7 @@
       else if(k === 'html'){ node.innerHTML = attrs[k]; }
       else if(k.indexOf('on') === 0 && typeof attrs[k] === 'function'){
         node.addEventListener(k.slice(2), attrs[k]);
-      } else {
+      } else if(attrs[k] !== null && attrs[k] !== undefined){
         node.setAttribute(k, attrs[k]);
       }
     }
@@ -656,8 +656,9 @@
       class: 'btn-primary',
       disabled: readyCount > 0 ? null : 'disabled',
       onclick: function(){
-        if(!state.apiKey){
-          state.errorMsg = 'Add your Claude API key in Settings before analyzing.';
+        if(!(window.AppKeys && window.AppKeys.has())){
+          if(window.AppKeys){ window.AppKeys.get(); }
+          state.errorMsg = 'Add your Claude API key, then tap Analyze again.';
           render();
           return;
         }
@@ -888,6 +889,16 @@
   }
 
   function callClaudeForRoom(room){
+    if(!window.AppKeys){
+      return Promise.reject(new Error('The key manager did not load. Check your connection and reload.'));
+    }
+    return window.AppKeys.get().then(function(apiKey){
+      if(!apiKey){ throw new Error('Add your Claude API key with the Settings button first.'); }
+      return callClaudeForRoomKeyed(room, apiKey);
+    });
+  }
+
+  function callClaudeForRoomKeyed(room, apiKey){
     var content = room.photos.map(function(p){
       return { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: p.workingBase64.split(',')[1] } };
     });
@@ -897,7 +908,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': state.apiKey,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -1197,11 +1208,7 @@
       el('input', { type: 'text', id: 'set-session', value: state.sessionName, placeholder: 'Optional label' }, [])
     ]));
 
-    sheet.appendChild(el('div', { class: 'field' }, [
-      el('label', {}, ['Claude API Key']),
-      el('input', { type: 'text', id: 'set-apikey', value: state.apiKey, placeholder: 'sk-ant-...' }, []),
-      el('div', { class: 'hint' }, ['Stored only in this browser. Never sent anywhere except Anthropic\u2019s API.'])
-    ]));
+    sheet.appendChild(el('div', { class: 'field', id: 'keyMount' }, []));
 
     sheet.appendChild(el('div', { class: 'field' }, [
       el('label', {}, ['Default Style Preference']),
@@ -1211,7 +1218,6 @@
 
     sheet.appendChild(el('button', { class: 'btn-primary', onclick: function(){
       state.sessionName = document.getElementById('set-session').value.trim();
-      state.apiKey = document.getElementById('set-apikey').value.trim();
       state.defaultStylePref = document.getElementById('set-style').value.trim();
       saveSettings();
       state.settingsOpen = false;
@@ -1262,6 +1268,7 @@
     clearNode(modalRoot);
     if(state.settingsOpen){
       modalRoot.appendChild(renderSettingsModal());
+      if(window.AppKeys){ window.AppKeys.mountSettings(document.getElementById('keyMount')); }
     }
 
     var footer = document.getElementById('main-footer');
@@ -1286,15 +1293,6 @@
   render();
 })();
 
-async function getModel(tier = 'sonnet') {
-  try {
-    const response = await fetch('../config.json');
-    const config = await response.json();
-    return config.models[tier];
-  } catch {
-    return 'claude-sonnet-5-5';
-  }
-}
 </script>
 </body>
 </html>

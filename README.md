@@ -15,7 +15,7 @@ Single self-contained `index.html`. No build step, no framework, no backend.
 - A small hand-rolled state machine drives six screens: Home/History, Project Overview, Context Form, Photo Capture, Analyzing, and Results, plus a Settings modal.
 - A project holds a list of rooms. Each room tracks its own context fields, photo set, analysis status, and result, so a project can be a single room or a whole apartment.
 - Photos are compressed client-side on canvas to a working image near 1024px and a thumbnail near 150px, both base64 JPEG, before anything leaves the browser. Each room supports up to six photos.
-- Analyze All Rooms calls the Claude API (model: claude-sonnet-5) once per room in sequence, sending that room's compressed photos plus its context fields, and is instructed to return JSON only. A parsing layer strips code fences and falls back to a raw text view with a per-room retry button if parsing fails.
+- Analyze All Rooms calls the Claude API (model: the current Claude Sonnet model) once per room in sequence, sending that room's compressed photos plus its context fields, and is instructed to return JSON only. A parsing layer strips code fences and falls back to a raw text view with a per-room retry button if parsing fails.
 - Openverse's public API (no key required) supplies two or three reference thumbnails per style direction, fetched client-side.
 - Saved analyses persist in localStorage as a project: id, date, project name, a representative thumbnail, and each room's parsed result minus reference image URLs, wrapped in try/catch throughout.
 
